@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>|| Results ||</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <script src="/static/JavaScript/jquery-3.6.0.min.js"></script>
+    <script src="/static/JavaScript/jquery.js"></script>
+    <script src="/static/JavaScript/bootstrap.min.js"></script>
+    <style>
+        .navbar {
+            background-color: rgb(187, 18, 60);
+        }
+
+        #heading {
+            font-style: italic;
+        }
+
+        #sign {
+            background-color: rgb(22, 156, 51);
+            border-radius: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand fs-3 text-light" href="{% url 'Home' %}">iNotes</a>
+        </div>
+
+        {% if 'user_name' in request.session %}
+        <span class="mx-2 text-light fs-5 fw-lighter">{{request.session.user_name}}</span>
+        <form method="get" action="" class="d-flex mx-2 my-1">
+            <input required type="search" name="search" placeholder="Search" aria-label="Search"
+                class="form-control me-2">
+        </form>
+        <a href="{% url 'LogOutHandler' %}" class="btn btn-dark mx-2">Logout</a>
+        {% else %}
+        <button type="button" data-bs-toggle="modal" data-bs-target="#loginmodal"
+            class="btn btn-dark mx-2">Login</button>
+        <button type="button" onclick="window.location.href={% url 'signUp' %}"
+            class="btn mx-2 btn-dark">Signup</button>
+        {% endif %}
+    </nav>
+
+    <div class="container my-2">
+        <h2 class="d-inline my-2 border-bottom pb-1 border-3">Search Results for: ({{query}})</h2>
+
+        <div class="row mb-2 mt-3">
+            {% for note in notes %}
+            <div class="col-md-12 mt-2">
+                <div class="row g-0 border rounded overflow-hidden flex-md-row shadow-sm h-md-250 position-relative">
+                    <div class="col p-4 d-flex flex-column position-static">
+                        {% comment %} <strong class="d-inline-block mb-1">Note by: <span
+                                class="fst-italic">{{request.session.user_name}}</span></strong> {% endcomment %}
+                        <h3 class="my-1">{{note.note_title}}</h3>
+                        <div class="my-1 text-muted">{{note.date_time|naturaltime}}</div>
+                        <p class="card-text mb-auto my-1">
+                        <div>{{note.note_desc|truncatechars:250}}</div>
+                        </p>
+                        <div>
+                            <a href="/note/{{note.note_id}}" class="btn btn-primary">View</a>
+                            <button id="d{{note.note_id}}" class="btn delete btn-danger float-end">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</body>
+</html>

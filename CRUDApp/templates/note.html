@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    {% load humanize %}
+
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% for note in note %}
+    <title>Note | {{note.note_title}}</title>
+    {% endfor %}
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <script src="/static/JavaScript/bootstrap.min.js"></script>
+    <style>
+        .navbar {
+            background-color: rgb(187, 18, 60);
+        }
+
+        #heading {
+            font-style: italic;
+        }
+
+        #sign {
+            background-color: rgb(22, 156, 51);
+            border-radius: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand fs-3 text-light" href="{% url 'Home' %}">iNotes</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+        </div>
+        {% if 'user_name' in request.session %}
+        <span class="mx-2 text-light fs-5 fw-lighter">{{request.session.user_name}}</span>
+        <a href="{% url 'LogOutHandler' %}" class="btn btn-dark mx-2">Logout</a>
+        {% else %}
+        <button type="button" data-bs-toggle="modal" data-bs-target="#loginmodal"
+            class="btn btn-dark mx-2">Login</button>
+        <button type="button" onclick="window.location.href={% url 'signUp' %}" class="btn mx-2 btn-dark">Signup</button>
+        {% endif %}
+
+    </nav>
+
+    {% for message in messages %}
+    <div id="message" class="container my-2">
+        <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+            <strong>{{message}}.</strong>
+            <button class="btn-close" type="button" data-bs-dismiss="alert" area-label="close"></button>
+        </div>
+    </div>
+    {% endfor %}
+
+
+    <div class="container">
+        {% for note in note %}
+        <div class="my-2">
+            <h2 id="note_title" class="border-bottom border-3 mt-5 d-inline">{{note.note_title}}</h2>
+        </div>
+        <div class="my-1 text-end text-muted">{{note.date_time|naturaltime}}</div>
+        <div id="note_desc" class="fs-5 my-2 bg-light shadow-md p-3 rounded">{{note.note_desc}}</div>
+
+        <div class="text-center">
+            <button id='edit' data-bs-toggle="modal" data-bs-target="#editmodal" class="btn btn-primary mx-2">Edit</button>
+            <button id="d{{note.note_id}}" class="btn delete btn-danger">Delete</button>
+        </div>
+        <script>let note_id = {{note.note_id}};</script>
+        {% endfor %}
+    </div>  
+
+    <!--Edit Modal--><!-- Login Modal -->
+    <div class="modal fade" id="editmodal" tabindex="-1" aria-labelledby="editmodalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editmodalLabel">Edit your Note</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm" method='post'> {% csrf_token %}
+                        <div class="my-4 col-sm-12 m-auto">
+                            <!-- <label for="name" class="form-label">Name:</label> -->
+                            <input required type="text" class="form-control text-center" id="title" name="title" placeholder="Enter note title">
+                            <small id="titlevalidate" class="form-text text-danger invalid-feedback">Title must be 5 to 50 characters long & should not have any digits & 2 or more consecutive white spaces.</small>
+                        </div>
+        
+                        <div class="my-4 col-sm-12 m-auto">
+                            <!-- <label for="age" class="form-label">Age:</label> -->
+                            <textarea required class="form-control my-auto text-center" id="desc" rows="5" name="desc" placeholder="Enter description here"></textarea>
+                            <small id="descvalidate" class="form-text text-danger invalid-feedback">Description must be atleast 5 characters long.</small>
+                        </div>
+        
+                        {% if 'user_name' in request.session %}
+                        <input type="submit" id="submitBtn" value="Update Note"
+                            class="btn btn-outline-success d-block m-auto my-3 col-md-6 fs-5 " />
+                        {% else %}
+                        <button disabled class="btn btn-outline-success d-block m-auto my-3 col-md-6 fs-5" />Login to Edit this Note</button>
+                        {% endif %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary m-auto" data-bs-dismiss="modal">Close</button>
+                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script src="/static/JavaScript/index.js"></script>
+<script>
+    const deleteBtn = document.getElementsByClassName('delete')[0];
+    deleteBtn.addEventListener('click', ()=>{
+        const result = confirm('Do you really want to delete this note!');
+        if(result){
+            const id = deleteBtn.id.substring(1);
+            window.location.href = `/deleteNote/${id}`;
+        }
+    });
+
+    const editBtn = document.getElementById('edit');
+    editBtn.addEventListener('click', ()=>{
+        let editTitle = document.getElementById('title');
+        let editDesc = document.getElementById('desc');
+
+        let note_title = document.getElementById('note_title');
+        let note_desc = document.getElementById('note_desc');
+
+        editTitle.value = note_title.innerText;
+        editDesc.value = note_desc.innerText;
+    });
+
+    const editForm = document.getElementById('editForm');
+    editForm.setAttribute('action', `/editNote/${note_id}`);
+</script>
+
+</html>

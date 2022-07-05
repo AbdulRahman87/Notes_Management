@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% load static %}
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>| Welcome to iNotes |</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <script src="/static/JavaScript/jquery-3.6.0.min.js"></script>
+    <script src="/static/JavaScript/jquery.js"></script>
+    <script src="/static/JavaScript/bootstrap.min.js"></script>
+    <style>
+        .navbar {
+            background-color: rgb(187, 18, 60);
+        }
+
+        #heading {
+            font-style: italic;
+        }
+
+        #sign {
+            background-color: rgb(22, 156, 51);
+            border-radius: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand fs-3 text-light" href="{% url 'Home' %}">iNotes</a>
+        </div>
+
+        {% if 'user_name' in request.session %}
+        <span class="mx-2 text-light fs-5 fw-lighter">{{request.session.user_name}}</span>
+        <form method="get" action="searchNote" class="d-flex mx-2 my-1">
+            <input required type="search" name="search" placeholder="Search" aria-label="Search"
+                class="form-control me-2">
+        </form>
+        <a href="{% url 'LogOutHandler' %}" class="btn btn-dark mx-2">Logout</a>
+        {% else %}
+        <button type="button" data-bs-toggle="modal" data-bs-target="#loginmodal"
+            class="btn btn-dark mx-2">Login</button>
+        <button type="button" onclick="window.location.href={% url 'signUp' %}"
+            class="btn mx-2 btn-dark">Signup</button>
+        {% endif %}
+
+    </nav>
+
+
+    {% for message in messages %}
+    <div id="message" class="container my-2">
+        <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+            <strong>{{message}}.</strong>
+            <button class="btn-close" type="button" data-bs-dismiss="alert" area-label="close"></button>
+        </div>
+    </div>
+    {% endfor %}
+
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginmodal" tabindex="-1" aria-labelledby="loginmodalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginmodalLabel">Login to iNotes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method='post' action='{% url 'LogInHandler' %}'> {% csrf_token %}
+                        <div class="my-4 col-sm-8 m-auto">
+                            <!-- <label for="name" class="form-label">Name:</label> -->
+                            <input required type="email" class="form-control text-center" id="reg_id" name="login_email"
+                                placeholder="Enter your email id">
+                        </div>
+
+                        <div class="my-4 col-sm-8 m-auto">
+                            <!-- <label for="age" class="form-label">Age:</label> -->
+                            <input required type="password" class="form-control text-center" id="password"
+                                name="login_pass" placeholder="Enter your password">
+                        </div>
+
+                        <input type="submit" value="Login!" class="btn btn-primary d-block m-auto  col-md-6 fs-5 " />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary m-auto" data-bs-dismiss="modal">Close</button>
+                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="text" class="mt-3 d-none container text-center">Welcome to iNotes:- Creating & managing your notes made
+        easy.</h3>
+
+    <div class="container">
+
+        <div id="form-body" class="shadow-lg my-3 p-4 mt-4 bg-body">
+            <div id="sign" class="text-center fs-2 mb-5 p-4 text-light ">
+                Create your Notes:
+            </div>
+            <form action="{% url 'addNote' %}" method='post'> {% csrf_token %}
+                <div class="my-4 col-sm-8 m-auto">
+                    <!-- <label for="name" class="form-label">Name:</label> -->
+                    <input required type="text" class="form-control text-center" id="title" name="title"
+                        placeholder="Enter note title">
+                    <small id="titlevalidate" class="form-text text-danger invalid-feedback">Title must be 5 to 50
+                        characters long & should not have any digits & 2 or more consecutive white spaces.</small>
+                </div>
+
+                <div class="my-4 col-sm-8 m-auto">
+                    <!-- <label for="age" class="form-label">Age:</label> -->
+                    <textarea required class="form-control my-auto text-center" id="desc" rows="4" name="desc" cols="8"
+                        placeholder="Enter description here"></textarea>
+                    <small id="descvalidate" class="form-text text-danger invalid-feedback">Description must be atleast
+                        5 characters long.</small>
+                </div>
+
+                {% if 'user_name' in request.session %}
+                <input type="submit" id="submitBtn" value="Create Note"
+                    class="btn btn-outline-success d-block m-auto my-3 col-md-6 fs-5 " />
+                {% else %}
+                <button disabled class="btn btn-outline-success d-block m-auto my-3 col-md-6 fs-5" />Login to Create a
+                Note</button>
+                {% endif %}
+            </form>
+        </div>
+
+    </div>
+
+    <hr class="container my-3">
+    <div class="container">
+        {% if 'user_name' in request.session %}
+        <div class="row mb-2 mt-3">
+            {% for note in notes %}
+            <div class="col-md-12 mt-2">
+                <div class="row g-0 border rounded overflow-hidden flex-md-row shadow-sm h-md-250 position-relative">
+                    <div class="col p-4 d-flex flex-column position-static">
+                        {% comment %} <strong class="d-inline-block mb-1">Note by: <span
+                                class="fst-italic">{{request.session.user_name}}</span></strong> {% endcomment %}
+                        <h3 class="my-1">{{note.note_title}}</h3>
+                        <div class="my-1 text-muted">{{note.date_time|naturaltime}}</div>
+                        <p class="card-text mb-auto my-1">
+                        <div>{{note.note_desc|truncatechars:250}}</div>
+                        </p>
+                        <div>
+                            <a href="/note/{{note.note_id}}" class="btn btn-primary">View</a>
+                            <button id="d{{note.note_id}}" class="btn delete btn-danger float-end">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="row mb-2 mt-3">
+            {% comment %} {% for post in allPost %} {% endcomment %}
+            <div class="col-md-12 mt-2">
+                <div
+                    class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                    <div class="col p-4 d-flex flex-column position-static">
+                        {% comment %} <strong class="d-inline-block mb-1">Note by: <span class="fst-italic">Your
+                                Name</span></strong> {% endcomment %}
+                        <h3 class="my-1">Title Here:</h3>
+                        <div class="my-1 text-muted">5 days ago</div>
+                        <p class="card-text mb-auto my-1">
+                        <div class="preview">Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque est
+                            doloremque, asperiores incidunt earum ullam corporis rerum sit magnam repellendus..</div>
+                        </p>
+                        <div>
+                            <a class="fs-6 btn btn-primary disabled float-start">View</a>
+                            <di class="float-end">
+                                <a class="btn disabled btn-danger">Delete</a>
+                                </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% comment %} {% endfor %} {% endcomment %}
+        </div>
+        {% endif %}
+    </div>
+
+</body>
+{% if 'user_name' in request.session %}
+<script src="/static/JavaScript/index.js"></script>
+<script>
+    const deleteBtn = document.getElementsByClassName('delete');
+    for (let bt of deleteBtn) {
+        bt.addEventListener('click', (e) => {
+            const id = e.target.id.substring(1);
+            const result = confirm('Do you really want to delete Note!');
+            if (result) {
+                window.location.href = `/deleteNote/${id}`;
+            }
+        });
+    }
+</script>
+{% endif %}
+
+</html>
